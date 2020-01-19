@@ -37,7 +37,7 @@ ARGS:
     <candidates>...    Strings to test for epochness
 ```
 
-Give it a number and it tries to interpet it as a date.
+Give it a number and it tries to interpret it as a date.
 
 ```bash
 $ epochs 1234567890
