@@ -11,7 +11,7 @@ Install with
 $ cargo install epochs-cli
 ```
 
-This install a binary called just `epochs`.
+This installs a binary called just `epochs`.
 
 ```bash
 $ epochs --help
