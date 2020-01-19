@@ -26,11 +26,11 @@ struct Opt {
     debug: bool,
 
     /// Don't report dates after this.
-    #[structopt(long, parse(try_from_str = parse_date), default_value = "9999-12-31")]
+    #[structopt(long, parse(try_from_str = parse_date), default_value = "2100-12-31")]
     max: NaiveDate,
 
     /// Don't report dates before this.
-    #[structopt(long, parse(try_from_str = parse_date), default_value = "0001-01-01")]
+    #[structopt(long, parse(try_from_str = parse_date), default_value = "2000-01-01")]
     min: NaiveDate,
 
     /// Desired format for output.
