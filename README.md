@@ -5,6 +5,40 @@ This takes strings off the command line and tries to interpret them as
 dates using the various methods that [the epochs
 crate](https://crates.io/crates/epochs) knows.
 
+Install with
+
+```bash
+$ cargo install epochs-cli
+```
+
+This install a binary called just `epochs`.
+
+```bash
+$ epochs --help
+epochs-cli 0.2.0
+Command line options for epochs
+
+USAGE:
+    epochs [FLAGS] [OPTIONS] [candidates]...
+
+FLAGS:
+    -d, --debug      Activate debug mode
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+    -v, --verbose    Verbose mode (-v, -vv, -vvv, etc.)
+
+OPTIONS:
+        --max <max>                        Don't report dates after this [default: 2100-12-31]
+        --min <min>                        Don't report dates before this [default: 2000-01-01]
+    -o, --output-format <output-format>    Desired format for output [default: text]  [possible values: JSON,
+                                           JsonPretty, Text]
+
+ARGS:
+    <candidates>...    Strings to test for epochness
+```
+
+Give it a number and it tries to interpet it as a date.
+
 ```bash
 $ epochs 1234567890
 
@@ -31,31 +65,6 @@ $ epochs 1234567890 --min=1900-01-01 --max=2020-12-31
   apfs => 1970-01-01T00:01:18.187493520
   java => 1972-06-23T22:44:53.520
   mozilla => 1970-01-01T21:43:07.493520
-```
-Here is the help page.
-
-```bash
-$ epochs --help
-epochs-cli 0.2.0
-Command line options for epochs
-
-USAGE:
-    epochs [FLAGS] [OPTIONS] [candidates]...
-
-FLAGS:
-    -d, --debug      Activate debug mode
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-    -v, --verbose    Verbose mode (-v, -vv, -vvv, etc.)
-
-OPTIONS:
-        --max <max>                        Don't report dates after this [default: 2100-12-31]
-        --min <min>                        Don't report dates before this [default: 2000-01-01]
-    -o, --output-format <output-format>    Desired format for output [default: text]  [possible values: JSON,
-                                           JsonPretty, Text]
-
-ARGS:
-    <candidates>...    Strings to test for epochness
 ```
 
 You can give it more than one thing to search for at a time.
@@ -113,4 +122,3 @@ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0
   }
 ]
 ```
-
