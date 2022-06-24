@@ -89,7 +89,7 @@ It uses [serde](https://crates.io/crates/serde) to give the output in
 JSON if you prefer.
 
 ```bash
-epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0
+$ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0 --output-format=JsonPretty
 [
   {
     "source": "39857.980209",
