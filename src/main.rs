@@ -6,7 +6,6 @@ extern crate maplit;
 
 use chrono::{NaiveDate, NaiveDateTime, ParseResult};
 use clap::Parser;
-use epochs;
 use itertools::Itertools;
 use regex::Regex;
 use serde::Serialize;
@@ -41,7 +40,7 @@ struct Args {
 
 #[derive(Debug, Clone, clap::ArgEnum)]
 enum OutputFormat {
-    JSON,
+    Json,
     JsonPretty,
     Text,
 }
@@ -59,6 +58,8 @@ enum View {
     Float,
     Hexadecimal,
     UUIDv1,
+    UUIDv6,
+    UUIDv7,
 }
 
 fn main() {
@@ -117,7 +118,7 @@ fn main() {
                 let d = ndt.date();
                 if d >= args.min && d <= args.max {
                     let mut ndts = HashMap::new();
-                    ndts.insert("UUIDv1".to_string(), ndt);
+                    ndts.insert("uuid v1".to_string(), ndt);
                     dates.push(Datelike {
                         source: c.to_string(),
                         viewed_as: View::UUIDv1,
@@ -126,6 +127,43 @@ fn main() {
                 }
             }
         }
+
+        if let Some(int) = get_uuid_v6_int(&c) {
+            if args.verbose > 1 {
+                println!("  Looks like a UUIDv6! {:?}", int);
+            }
+            if let Some(ndt) = epochs::uuid_v1(int) {
+                let d = ndt.date();
+                if d >= args.min && d <= args.max {
+                    let mut ndts = HashMap::new();
+                    ndts.insert("uuid v1".to_string(), ndt);
+                    dates.push(Datelike {
+                        source: c.to_string(),
+                        viewed_as: View::UUIDv6,
+                        epochs: ndts,
+                    });
+                }
+            }
+        }
+
+        if let Some(int) = get_uuid_v7_int(&c) {
+            if args.verbose > 1 {
+                println!("  Looks like a UUIDv7! {:?}", int);
+            }
+            if let Some(ndt) = epochs::java(int) {
+                let d = ndt.date();
+                if d >= args.min && d <= args.max {
+                    let mut ndts = HashMap::new();
+                    ndts.insert("java".to_string(), ndt);
+                    dates.push(Datelike {
+                        source: c.to_string(),
+                        viewed_as: View::UUIDv7,
+                        epochs: ndts,
+                    });
+                }
+            }
+        }
+
     }
 
     if args.debug {
@@ -143,7 +181,7 @@ fn main() {
                 }
             }
         }
-        OutputFormat::JSON => {
+        OutputFormat::Json => {
             let json = serde_json::to_string(&dates).unwrap();
             println!("{}", json);
         }
@@ -216,7 +254,7 @@ fn get_epochs(int: i64, min: NaiveDate, max: NaiveDate) -> HashMap<String, Naive
     if let Some(ndt) = epochs::uuid_v1(int) {
         let d = ndt.date();
         if d >= min && d <= max {
-            ndts.insert("UUIDv1".to_string(), ndt);
+            ndts.insert("uuid v1".to_string(), ndt);
         }
     }
 
@@ -237,9 +275,9 @@ fn get_epochs(int: i64, min: NaiveDate, max: NaiveDate) -> HashMap<String, Naive
     ndts
 }
 
-/// See if the given string contains a UUID version 1 string.  If it
-/// does, extract the portion that represents a date-time and return it
-/// as an integer.
+/// See if the given string contains a UUID version 1 string. If it
+/// does, extract the portion that represents a date-time and return
+/// it as an integer.
 ///
 fn get_uuid_v1_int(text: &str) -> Option<i64> {
     lazy_static! {
@@ -257,6 +295,60 @@ fn get_uuid_v1_int(text: &str) -> Option<i64> {
     }
     if let Some(cap) = RE.captures(text) {
         let hex = RE.replace_all(&cap[0], "${high}${mid}${low}");
+        if let Ok(int) = i64::from_str_radix(&hex, 16) {
+            return Some(int);
+        }
+    }
+    None
+}
+
+/// See if the given string contains a UUID version 6 string. If it
+/// does, extract the portion that represents a date-time and return
+/// it as an integer.
+///
+fn get_uuid_v6_int(text: &str) -> Option<i64> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(
+            r"(?x)
+            (?P<high>[0-9A-Fa-f]{8})   -?
+            (?P<mid>[0-9A-Fa-f]{4})    -?
+            6                            # this means version 6
+            (?P<low>[0-9A-Fa-f]{3})    -?
+            [0-9A-Fa-f]{4}             -?
+            [0-9A-Fa-f]{12}
+            ",
+        )
+        .unwrap();
+    }
+    if let Some(cap) = RE.captures(text) {
+        let hex = RE.replace_all(&cap[0], "${high}${mid}${low}");
+        if let Ok(int) = i64::from_str_radix(&hex, 16) {
+            return Some(int);
+        }
+    }
+    None
+}
+
+/// See if the given string contains a UUID version 7 string. If it
+/// does, extract the portion that represents a date-time and return
+/// it as an integer.
+///
+fn get_uuid_v7_int(text: &str) -> Option<i64> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(
+            r"(?x)
+            (?P<ts1>[0-9A-Fa-f]{8})    -?
+            (?P<ts2>[0-9A-Fa-f]{4})    -?
+            7                            # this means version 7
+            [0-9A-Fa-f]{3}             -?
+            [0-9A-Fa-f]{4}             -?
+            [0-9A-Fa-f]{12}
+            ",
+        )
+        .unwrap();
+    }
+    if let Some(cap) = RE.captures(text) {
+        let hex = RE.replace_all(&cap[0], "${ts1}${ts2}");
         if let Ok(int) = i64::from_str_radix(&hex, 16) {
             return Some(int);
         }
