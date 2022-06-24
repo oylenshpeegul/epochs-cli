@@ -1,54 +1,49 @@
 #[macro_use]
-extern crate clap;
-
-#[macro_use]
 extern crate lazy_static;
 
 #[macro_use]
 extern crate maplit;
 
 use chrono::{NaiveDate, NaiveDateTime, ParseResult};
+use clap::Parser;
 use epochs;
 use itertools::Itertools;
 use regex::Regex;
 use serde::Serialize;
 use std::collections::HashMap;
-use structopt::StructOpt;
 
 /// Command line options for epochs.
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 struct Opt {
     /// Strings to test for epochness.
     candidates: Vec<String>,
 
     /// Activate debug mode
-    #[structopt(short, long)]
+    #[clap(short, long)]
     debug: bool,
 
     /// Don't report dates after this.
-    #[structopt(long, parse(try_from_str = parse_date), default_value = "2100-12-31")]
+    #[clap(long, parse(try_from_str = parse_date), default_value = "2100-12-31")]
     max: NaiveDate,
 
     /// Don't report dates before this.
-    #[structopt(long, parse(try_from_str = parse_date), default_value = "2000-01-01")]
+    #[clap(long, parse(try_from_str = parse_date), default_value = "2000-01-01")]
     min: NaiveDate,
 
     /// Desired format for output.
-    #[structopt(short, long, default_value = "text", possible_values = &OutputFormat::variants(), case_insensitive = true)]
+    #[clap(short, long, arg_enum, default_value = "text", case_insensitive = true)]
     output_format: OutputFormat,
 
     /// Verbose mode (-v, -vv, -vvv, etc.)
-    #[structopt(short, long, parse(from_occurrences))]
+    #[clap(short, long, parse(from_occurrences))]
     verbose: u8,
 }
 
-arg_enum! {
-    #[derive(Debug)]
-    enum OutputFormat {
-        JSON,
-        JsonPretty,
-        Text,
-    }
+#[derive(Debug, Clone, clap::ArgEnum)]
+enum OutputFormat {
+    JSON,
+    JsonPretty,
+    Text,
 }
 
 #[derive(Debug, Serialize)]
@@ -67,7 +62,7 @@ enum View {
 }
 
 fn main() {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
     if opt.debug {
         println!("{:?}", opt);
     }

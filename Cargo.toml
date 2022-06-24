@@ -1,12 +1,12 @@
 [package]
 name = "epochs-cli"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["oylenshpeegul <oylenshpeegul@gmail.com>"]
 description = "Check strings given on the command line against different epochs."
 license = "MPL-2.0"
 repository = "https://github.com/oylenshpeegul/epochs-cli"
 readme = "README.md"
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "epochs"
@@ -14,14 +14,12 @@ path = "src/main.rs"
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
-clap = "2.33"
+clap = { version = "3.2", features = ["derive"] }
 epochs = "0.2"
-itertools = "0.8"
+itertools = "0.10"
 lazy_static = "1.4"
 maplit = "1.0"
 regex = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-structopt = "0.3"
-structopt-derive = "0.4"
 
