@@ -15,26 +15,34 @@ This installs a binary called just `epochs`.
 
 ```
 $ epochs --help
-epochs-cli 0.2.0
+epochs-cli 0.3.0
 Command line options for epochs
 
 USAGE:
-    epochs [FLAGS] [OPTIONS] [candidates]...
-
-FLAGS:
-    -d, --debug      Activate debug mode
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-    -v, --verbose    Verbose mode (-v, -vv, -vvv, etc.)
-
-OPTIONS:
-        --max <max>                        Don't report dates after this [default: 2100-12-31]
-        --min <min>                        Don't report dates before this [default: 2000-01-01]
-    -o, --output-format <output-format>    Desired format for output [default: text]  [possible values: JSON,
-                                           JsonPretty, Text]
+    epochs [OPTIONS] [CANDIDATES]...
 
 ARGS:
-    <candidates>...    Strings to test for epochness
+    <CANDIDATES>...    Strings to test for epochness
+
+OPTIONS:
+    -d, --debug
+            Activate debug mode
+
+    -h, --help
+            Print help information
+
+        --max <MAX>
+            Don't report dates after this [default: 2100-12-31]
+
+        --min <MIN>
+            Don't report dates before this [default: 2000-01-01]
+
+    -o, --output-format <OUTPUT_FORMAT>
+            Desired format for output [default: text] [possible values: json, json-pretty, text]
+
+    -v, --verbose
+            Verbose mode (-v, -vv, -vvv, etc.)
+
 ```
 
 Give it a number and it tries to interpret it as a date.
@@ -80,9 +88,8 @@ $ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0
   google calendar => 2007-03-16T23:31:30
   unix => 2009-02-13T23:31:30
 
-33c41a44-6cea-11e7-907b-a6006ad3dba0 UUIDv1
-  UUIDv1 => 2017-07-20T01:24:40.472634
-  windows file => 2035-10-07T01:24:40.472634
+33c41a44-6cea-11e7-907b-a6006ad3dba0 Uuid
+  uuid_v1 => 2017-07-20T01:24:40.472634
 ```
 
 It uses [serde](https://crates.io/crates/serde) to give the output in
@@ -102,9 +109,9 @@ $ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0 --output-f
     "source": "1234567890",
     "viewed_as": "Decimal",
     "epochs": {
+      "unix": "2009-02-13T23:31:30",
       "cocoa": "2040-02-14T23:31:30",
-      "google calendar": "2007-03-16T23:31:30",
-      "unix": "2009-02-13T23:31:30"
+      "google calendar": "2007-03-16T23:31:30"
     }
   },
   {
@@ -114,10 +121,9 @@ $ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0 --output-f
   },
   {
     "source": "33c41a44-6cea-11e7-907b-a6006ad3dba0",
-    "viewed_as": "UUIDv1",
+    "viewed_as": "Uuid",
     "epochs": {
-      "UUIDv1": "2017-07-20T01:24:40.472634"
-      "windows file": "2035-10-07T01:24:40.472634"
+      "uuid_v1": "2017-07-20T01:24:40.472634"
     }
   }
 ]
