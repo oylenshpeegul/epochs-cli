@@ -7,13 +7,13 @@ crate](https://crates.io/crates/epochs) knows.
 
 Install with
 
-```bash
+```
 $ cargo install epochs-cli
 ```
 
 This installs a binary called just `epochs`.
 
-```bash
+```
 $ epochs --help
 epochs-cli 0.2.0
 Command line options for epochs
@@ -39,7 +39,7 @@ ARGS:
 
 Give it a number and it tries to interpret it as a date.
 
-```bash
+```
 $ epochs 1234567890
 
 1234567890 Decimal
@@ -51,7 +51,7 @@ $ epochs 1234567890
 
 Use the --max and --min options to change the amount of output.
 
-```bash
+```
 $ epochs 1234567890 --min=1900-01-01 --max=2020-12-31
 
 1234567890 Decimal
@@ -69,7 +69,7 @@ $ epochs 1234567890 --min=1900-01-01 --max=2020-12-31
 
 You can give it more than one thing to search for at a time.
 
-```bash
+```
 $ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0 
 
 39857.980209 Float
@@ -88,7 +88,7 @@ $ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0
 It uses [serde](https://crates.io/crates/serde) to give the output in
 JSON if you prefer.
 
-```bash
+```
 $ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0 --output-format=JsonPretty
 [
   {
