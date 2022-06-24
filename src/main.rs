@@ -57,9 +57,14 @@ enum View {
     Decimal,
     Float,
     Hexadecimal,
-    UUIDv1,
-    UUIDv6,
-    UUIDv7,
+    Uuid,
+}
+
+#[derive(Debug, Serialize)]
+enum Uuid {
+    V1(NaiveDateTime),
+    V6(NaiveDateTime),
+    V7(NaiveDateTime),
 }
 
 fn main() {
@@ -110,59 +115,18 @@ fn main() {
             }
         }
 
-        if let Some(int) = get_uuid_v1_int(&c) {
-            if args.verbose > 1 {
-                println!("  Looks like a UUIDv1! {:?}", int);
-            }
-            if let Some(ndt) = epochs::uuid_v1(int) {
-                let d = ndt.date();
-                if d >= args.min && d <= args.max {
-                    let mut ndts = HashMap::new();
-                    ndts.insert("uuid v1".to_string(), ndt);
-                    dates.push(Datelike {
-                        source: c.to_string(),
-                        viewed_as: View::UUIDv1,
-                        epochs: ndts,
-                    });
-                }
-            }
-        }
-
-        if let Some(int) = get_uuid_v6_int(&c) {
-            if args.verbose > 1 {
-                println!("  Looks like a UUIDv6! {:?}", int);
-            }
-            if let Some(ndt) = epochs::uuid_v1(int) {
-                let d = ndt.date();
-                if d >= args.min && d <= args.max {
-                    let mut ndts = HashMap::new();
-                    ndts.insert("uuid v1".to_string(), ndt);
-                    dates.push(Datelike {
-                        source: c.to_string(),
-                        viewed_as: View::UUIDv6,
-                        epochs: ndts,
-                    });
-                }
-            }
-        }
-
-        if let Some(int) = get_uuid_v7_int(&c) {
-            if args.verbose > 1 {
-                println!("  Looks like a UUIDv7! {:?}", int);
-            }
-            if let Some(ndt) = epochs::java(int) {
-                let d = ndt.date();
-                if d >= args.min && d <= args.max {
-                    let mut ndts = HashMap::new();
-                    ndts.insert("java".to_string(), ndt);
-                    dates.push(Datelike {
-                        source: c.to_string(),
-                        viewed_as: View::UUIDv7,
-                        epochs: ndts,
-                    });
-                }
-            }
-        }
+        if let Some(uuid) = get_uuid(&c) {
+            let epochs = match uuid {
+                Uuid::V1(ndt) => hashmap! {"uuid_v1".to_string() => ndt},
+                Uuid::V6(ndt) => hashmap! {"uuid_v6".to_string() => ndt},
+                Uuid::V7(ndt) => hashmap! {"uuid_v7".to_string() => ndt},
+            };
+            dates.push(Datelike {
+                source: c.to_string(),
+                viewed_as: View::Uuid,
+                epochs,
+            });
+        };
 
     }
 
@@ -275,83 +239,52 @@ fn get_epochs(int: i64, min: NaiveDate, max: NaiveDate) -> HashMap<String, Naive
     ndts
 }
 
-/// See if the given string contains a UUID version 1 string. If it
-/// does, extract the portion that represents a date-time and return
-/// it as an integer.
+/// See if the given string contains a UUID string. If it does,
+/// extract the version and the date-time if it has it.
 ///
-fn get_uuid_v1_int(text: &str) -> Option<i64> {
+fn get_uuid(text: &str) -> Option<Uuid> {
     lazy_static! {
         static ref RE: Regex = Regex::new(
             r"(?x)
-            (?P<low>[0-9A-Fa-f]{8})    -?
-            (?P<mid>[0-9A-Fa-f]{4})    -?
-            1                            # this means version 1
-            (?P<high>[0-9A-Fa-f]{3})   -?
-            [0-9A-Fa-f]{4}             -?
+            ([0-9A-Fa-f]{8})  -?
+            ([0-9A-Fa-f]{4})  -?
+            ([0-9]{1})
+            ([0-9A-Fa-f]{3})  -?
+            [0-9A-Fa-f]{4}    -?
             [0-9A-Fa-f]{12}
             ",
         )
         .unwrap();
     }
     if let Some(cap) = RE.captures(text) {
-        let hex = RE.replace_all(&cap[0], "${high}${mid}${low}");
-        if let Ok(int) = i64::from_str_radix(&hex, 16) {
-            return Some(int);
-        }
-    }
-    None
-}
-
-/// See if the given string contains a UUID version 6 string. If it
-/// does, extract the portion that represents a date-time and return
-/// it as an integer.
-///
-fn get_uuid_v6_int(text: &str) -> Option<i64> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(
-            r"(?x)
-            (?P<high>[0-9A-Fa-f]{8})   -?
-            (?P<mid>[0-9A-Fa-f]{4})    -?
-            6                            # this means version 6
-            (?P<low>[0-9A-Fa-f]{3})    -?
-            [0-9A-Fa-f]{4}             -?
-            [0-9A-Fa-f]{12}
-            ",
-        )
-        .unwrap();
-    }
-    if let Some(cap) = RE.captures(text) {
-        let hex = RE.replace_all(&cap[0], "${high}${mid}${low}");
-        if let Ok(int) = i64::from_str_radix(&hex, 16) {
-            return Some(int);
-        }
-    }
-    None
-}
-
-/// See if the given string contains a UUID version 7 string. If it
-/// does, extract the portion that represents a date-time and return
-/// it as an integer.
-///
-fn get_uuid_v7_int(text: &str) -> Option<i64> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(
-            r"(?x)
-            (?P<ts1>[0-9A-Fa-f]{8})    -?
-            (?P<ts2>[0-9A-Fa-f]{4})    -?
-            7                            # this means version 7
-            [0-9A-Fa-f]{3}             -?
-            [0-9A-Fa-f]{4}             -?
-            [0-9A-Fa-f]{12}
-            ",
-        )
-        .unwrap();
-    }
-    if let Some(cap) = RE.captures(text) {
-        let hex = RE.replace_all(&cap[0], "${ts1}${ts2}");
-        if let Ok(int) = i64::from_str_radix(&hex, 16) {
-            return Some(int);
-        }
+        let version = cap.get(3).unwrap().as_str();
+        match version {
+            "1" => {
+                let hex = format!("{}{}{}", &cap[4], &cap[2], &cap[1]);
+                if let Ok(int) = i64::from_str_radix(&hex, 16) {
+                    if let Some(ndt) = epochs::uuid_v1(int) {
+                        return Some(Uuid::V1(ndt));
+                    }
+                }
+            },
+            "6" => {
+                let hex = format!("{}{}{}", &cap[1], &cap[2], &cap[4]);
+                if let Ok(int) = i64::from_str_radix(&hex, 16) {
+                    if let Some(ndt) = epochs::uuid_v1(int) {
+                        return Some(Uuid::V6(ndt));
+                    }
+                }
+            },
+            "7" => {
+                let hex = format!("{}{}", &cap[1], &cap[2]);
+                if let Ok(int) = i64::from_str_radix(&hex, 16) {
+                    if let Some(ndt) = epochs::java(int) {
+                        return Some(Uuid::V7(ndt));
+                    }
+                }
+            },
+            _ => (),
+        };
     }
     None
 }
@@ -367,20 +300,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn get_uuid_v1_int_run() {
-        let result = get_uuid_v1_int("33c41a44-6cea-11e7-907b-a6006ad3dba0");
-        assert_eq!(result.unwrap(), 137198066804726340);
+    fn get_uuid_tests() {
+        let uuid = get_uuid("33c41a44-6cea-11e7-907b-a6006ad3dba0");
+        if let Some(Uuid::V1(ndt)) = uuid {
+            assert_eq!(ndt.to_string(), "2017-07-20 01:24:40.472634");
+        } else {
+            panic!();
+        }
 
-        assert_eq!(
-            epochs::uuid_v1(result.unwrap()).unwrap().to_string(),
-            "2017-07-20 01:24:40.472634",
-        );
+        let uuid = get_uuid("33c41a44-6cea-21e7-907b-a6006ad3dba0");
+        assert!(uuid.is_none());
+
+        let uuid = get_uuid("1EC9414C-232A-6B00-B3C8-9E6BDECED846");
+        if let Some(Uuid::V6(ndt)) = uuid {
+            assert_eq!(ndt.to_string(), "2022-02-22 19:22:22");
+        } else {
+            panic!();
+        }
+
+        let uuid = get_uuid("017F22E2-79B0-7CC3-98C4-DC0C0C07398F");
+        if let Some(Uuid::V7(ndt)) = uuid {
+            assert_eq!(ndt.to_string(), "2022-02-22 19:22:22");
+        } else {
+            panic!();
+        }
+
     }
 
-    #[test]
-    fn get_uuid_v1_int_fail() {
-        // This is not a version 1 UUID------------v
-        let result = get_uuid_v1_int("33c41a44-6cea-21e7-907b-a6006ad3dba0");
-        assert_eq!(result, None);
-    }
 }
