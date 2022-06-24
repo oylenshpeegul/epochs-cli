@@ -113,11 +113,18 @@ fn main() {
             if args.verbose > 1 {
                 println!("  Looks like a UUIDv1! {:?}", int);
             }
-            dates.push(Datelike {
-                source: c.to_string(),
-                viewed_as: View::UUIDv1,
-                epochs: get_epochs(int, args.min, args.max),
-            });
+            if let Some(ndt) = epochs::uuid_v1(int) {
+                let d = ndt.date();
+                if d >= args.min && d <= args.max {
+                    let mut ndts = HashMap::new();
+                    ndts.insert("UUIDv1".to_string(), ndt);
+                    dates.push(Datelike {
+                        source: c.to_string(),
+                        viewed_as: View::UUIDv1,
+                        epochs: ndts,
+                    });
+                }
+            }
         }
     }
 
