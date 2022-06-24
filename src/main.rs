@@ -14,7 +14,7 @@ use std::collections::HashMap;
 
 /// Command line options for epochs.
 #[derive(Debug, Parser)]
-struct Opt {
+struct Args {
     /// Strings to test for epochness.
     candidates: Vec<String>,
 
@@ -62,41 +62,41 @@ enum View {
 }
 
 fn main() {
-    let opt = Opt::parse();
-    if opt.debug {
-        println!("{:?}", opt);
+    let args = Args::parse();
+    if args.debug {
+        println!("{:?}", args);
     }
 
     let mut dates = vec![];
 
-    for c in opt.candidates {
-        if opt.debug {
+    for c in args.candidates {
+        if args.debug {
             println!("{:?}", c);
         }
 
         if let Ok(int) = c.parse::<i64>() {
-            if opt.verbose > 1 {
+            if args.verbose > 1 {
                 println!("  As decimal integer: {}", int);
             }
             dates.push(Datelike {
                 source: c.to_string(),
                 viewed_as: View::Decimal,
-                epochs: get_epochs(int, opt.min, opt.max),
+                epochs: get_epochs(int, args.min, args.max),
             });
         }
         if let Ok(int) = i64::from_str_radix(&c, 16) {
-            if opt.verbose > 1 {
+            if args.verbose > 1 {
                 println!("  As hexadecimal integer: {}", int);
             }
             dates.push(Datelike {
                 source: c.to_string(),
                 viewed_as: View::Hexadecimal,
-                epochs: get_epochs(int, opt.min, opt.max),
+                epochs: get_epochs(int, args.min, args.max),
             });
         }
 
         if let Ok(float) = c.parse::<f64>() {
-            if opt.verbose > 1 {
+            if args.verbose > 1 {
                 println!("  As a float! {:?}", float);
             }
 
@@ -110,22 +110,22 @@ fn main() {
         }
 
         if let Some(int) = get_uuid_v1_int(&c) {
-            if opt.verbose > 1 {
+            if args.verbose > 1 {
                 println!("  Looks like a UUIDv1! {:?}", int);
             }
             dates.push(Datelike {
                 source: c.to_string(),
                 viewed_as: View::UUIDv1,
-                epochs: get_epochs(int, opt.min, opt.max),
+                epochs: get_epochs(int, args.min, args.max),
             });
         }
     }
 
-    if opt.debug {
+    if args.debug {
         println!("{:?}", dates);
     }
 
-    match opt.output_format {
+    match args.output_format {
         OutputFormat::Text => {
             for date in &dates {
                 if !date.epochs.is_empty() {
