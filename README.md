@@ -15,8 +15,9 @@ This installs a binary called just `epochs`.
 
 ```
 $ epochs --help
-epochs-cli 0.3.0
-Command line options for epochs
+epochs-cli 0.4.1
+Tim Heaney <oylenshpeegul@gmail.com>
+Check strings given on the command line against different epochs.
 
 USAGE:
     epochs [OPTIONS] [CANDIDATES]...
@@ -42,6 +43,9 @@ OPTIONS:
 
     -v, --verbose
             Verbose mode (-v, -vv, -vvv, etc.)
+
+    -V, --version
+            Print version information
 
 ```
 
@@ -73,12 +77,13 @@ $ epochs 1234567890 --min=1900-01-01 --max=2020-12-31
   apfs => 1970-01-01T00:01:18.187493520
   java => 1972-06-23T22:44:53.520
   mozilla => 1970-01-01T21:43:07.493520
+
 ```
 
 You can give it more than one thing to search for at a time.
 
 ```
-$ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0 
+$ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0
 
 39857.980209 Float
   icq => 2009-02-13T23:31:30.057
@@ -127,4 +132,30 @@ $ epochs 39857.980209 1234567890 33c41a44-6cea-11e7-907b-a6006ad3dba0 --output-f
     }
   }
 ]
+```
+
+It will check for [UUID versions 6 and
+7](https://uuid6.github.io/uuid6-ietf-draft/) timestamps too. These
+re-use `uuid_v1` and `java` timestamps from the `epochs` crate.
+
+```
+$ epochs 1EC9414C-232A-6B00-B3C8-9E6BDECED846 017F22E2-79B0-7CC3-98C4-DC0C0C07398F
+
+1EC9414C-232A-6B00-B3C8-9E6BDECED846 Uuid
+  uuid_v6 => 2022-02-22T19:22:22
+
+017F22E2-79B0-7CC3-98C4-DC0C0C07398F Uuid
+  uuid_v7 => 2022-02-22T19:22:22
+
+```
+
+It will also check for [ULIDs](https://github.com/ulid/spec). These
+have `java` timestamps too, but everything is base32-encoded.
+
+```
+$ epochs 01FWHE4YDGFK1SHH6W1G60EECF
+
+01FWHE4YDGFK1SHH6W1G60EECF Ulid
+  ulid => 2022-02-22T19:22:22
+
 ```

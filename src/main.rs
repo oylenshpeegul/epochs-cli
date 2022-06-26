@@ -13,6 +13,7 @@ use std::collections::HashMap;
 
 /// Command line options for epochs.
 #[derive(Debug, Parser)]
+#[clap(author, version, about, long_about = None)]
 struct Args {
     /// Strings to test for epochness.
     candidates: Vec<String>,
