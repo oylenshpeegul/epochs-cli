@@ -57,6 +57,7 @@ enum View {
     Decimal,
     Float,
     Hexadecimal,
+    Ulid,
     Uuid,
 }
 
@@ -115,6 +116,14 @@ fn main() {
             }
         }
 
+        if let Some(ndt) = get_ulid(&c) {
+            dates.push(Datelike {
+                source: c.to_string(),
+                viewed_as: View::Ulid,
+                epochs: hashmap! {"ulid".to_string() => ndt},
+            });
+        }
+        
         if let Some(uuid) = get_uuid(&c) {
             let epochs = match uuid {
                 Uuid::V1(ndt) => hashmap! {"uuid_v1".to_string() => ndt},
@@ -239,6 +248,24 @@ fn get_epochs(int: i64, min: NaiveDate, max: NaiveDate) -> HashMap<String, Naive
     ndts
 }
 
+/// See if the given string contains a ULID. If it does, extract the
+/// timestamp. (https://github.com/ulid/spec)
+///
+fn get_ulid(text: &str) -> Option<NaiveDateTime> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$").unwrap();
+    }
+    if RE.is_match(text) {
+        // The first ten characters of the ULID contain the timestamp.
+        let ts_ms = crockford::decode(&text[..10]).unwrap();
+        let secs = (ts_ms / 1000) as i64;
+        let nsecs = (ts_ms % 1000) as u32 * 1_000_000;
+        NaiveDateTime::from_timestamp_opt(secs, nsecs)
+    } else {
+        None
+    }
+}
+
 /// See if the given string contains a UUID string. If it does,
 /// extract the version and the date-time if it has it.
 ///
@@ -299,6 +326,16 @@ mod tests {
 
     use super::*;
 
+    #[test]
+    fn get_ulid_tests() {
+        let ulid = get_ulid("01FWHE4YDGFK1SHH6W1G60EECF");
+        if let Some(ndt) = ulid {
+            assert_eq!(ndt.to_string(), "2022-02-22 19:22:22");
+        } else {
+            panic!();
+        }
+    }
+    
     #[test]
     fn get_uuid_tests() {
         let uuid = get_uuid("33c41a44-6cea-11e7-907b-a6006ad3dba0");
