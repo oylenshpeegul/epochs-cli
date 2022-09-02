@@ -1,12 +1,10 @@
 #[macro_use]
-extern crate lazy_static;
-
-#[macro_use]
 extern crate maplit;
 
 use chrono::{NaiveDate, NaiveDateTime, ParseResult};
 use clap::Parser;
 use itertools::Itertools;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -124,7 +122,7 @@ fn main() {
                 epochs: hashmap! {"ulid".to_string() => ndt},
             });
         }
-        
+
         if let Some(uuid) = get_uuid(&c) {
             let epochs = match uuid {
                 Uuid::V1(ndt) => hashmap! {"uuid_v1".to_string() => ndt},
@@ -137,7 +135,6 @@ fn main() {
                 epochs,
             });
         };
-
     }
 
     if args.debug {
@@ -253,9 +250,9 @@ fn get_epochs(int: i64, min: NaiveDate, max: NaiveDate) -> HashMap<String, Naive
 /// timestamp. (https://github.com/ulid/spec)
 ///
 fn get_ulid(text: &str) -> Option<NaiveDateTime> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$").unwrap();
-    }
+    static RE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$").unwrap());
+
     if RE.is_match(text) {
         // The first ten characters of the ULID contain the timestamp.
         let ts_ms = crockford::decode(&text[..10]).unwrap();
@@ -271,8 +268,8 @@ fn get_ulid(text: &str) -> Option<NaiveDateTime> {
 /// extract the version and the date-time if it has it.
 ///
 fn get_uuid(text: &str) -> Option<Uuid> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(
+    static RE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(
             r"(?x)
             ([0-9A-Fa-f]{8})  -?
             ([0-9A-Fa-f]{4})  -?
@@ -282,8 +279,9 @@ fn get_uuid(text: &str) -> Option<Uuid> {
             [0-9A-Fa-f]{12}
             ",
         )
-        .unwrap();
-    }
+        .unwrap()
+    });
+
     if let Some(cap) = RE.captures(text) {
         let version = cap.get(3).unwrap().as_str();
         match version {
@@ -294,7 +292,7 @@ fn get_uuid(text: &str) -> Option<Uuid> {
                         return Some(Uuid::V1(ndt));
                     }
                 }
-            },
+            }
             "6" => {
                 let hex = format!("{}{}{}", &cap[1], &cap[2], &cap[4]);
                 if let Ok(int) = i64::from_str_radix(&hex, 16) {
@@ -302,7 +300,7 @@ fn get_uuid(text: &str) -> Option<Uuid> {
                         return Some(Uuid::V6(ndt));
                     }
                 }
-            },
+            }
             "7" => {
                 let hex = format!("{}{}", &cap[1], &cap[2]);
                 if let Ok(int) = i64::from_str_radix(&hex, 16) {
@@ -310,7 +308,7 @@ fn get_uuid(text: &str) -> Option<Uuid> {
                         return Some(Uuid::V7(ndt));
                     }
                 }
-            },
+            }
             _ => (),
         };
     }
@@ -336,7 +334,7 @@ mod tests {
             panic!();
         }
     }
-    
+
     #[test]
     fn get_uuid_tests() {
         let uuid = get_uuid("33c41a44-6cea-11e7-907b-a6006ad3dba0");
@@ -362,7 +360,5 @@ mod tests {
         } else {
             panic!();
         }
-
     }
-
 }
