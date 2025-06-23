@@ -2,7 +2,7 @@
 extern crate maplit;
 
 use chrono::{DateTime, NaiveDate, NaiveDateTime, ParseResult};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use itertools::Itertools;
 use regex::Regex;
 use serde::Serialize;
@@ -11,33 +11,33 @@ use std::sync::LazyLock;
 
 /// Command line options for epochs.
 #[derive(Debug, Parser)]
-#[clap(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None)]
 struct Args {
     /// Strings to test for epochness.
     candidates: Vec<String>,
 
     /// Activate debug mode
-    #[clap(short, long)]
+    #[arg(short, long)]
     debug: bool,
 
     /// Don't report dates after this.
-    #[clap(long, parse(try_from_str = parse_date), default_value = "2100-12-31")]
+    #[arg(long, value_parser = parse_date, default_value = "2100-12-31")]
     max: NaiveDate,
 
     /// Don't report dates before this.
-    #[clap(long, parse(try_from_str = parse_date), default_value = "2000-01-01")]
+    #[arg(long, value_parser = parse_date, default_value = "2000-01-01")]
     min: NaiveDate,
 
     /// Desired format for output.
-    #[clap(short, long, arg_enum, default_value = "text", case_insensitive = true)]
+    #[arg(short, long, value_enum, default_value_t = OutputFormat::Text)]
     output_format: OutputFormat,
 
     /// Verbose mode (-v, -vv, -vvv, etc.)
-    #[clap(short, long, parse(from_occurrences))]
+    #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 }
 
-#[derive(Debug, Clone, clap::ArgEnum)]
+#[derive(Debug, Clone, ValueEnum)]
 enum OutputFormat {
     Json,
     JsonPretty,
@@ -70,19 +70,19 @@ enum Uuid {
 fn main() {
     let args = Args::parse();
     if args.debug {
-        println!("{:?}", args);
+        println!("{args:?}");
     }
 
     let mut dates = vec![];
 
     for c in args.candidates {
         if args.debug {
-            println!("{:?}", c);
+            println!("{c:?}");
         }
 
         if let Ok(int) = c.parse::<i64>() {
             if args.verbose > 1 {
-                println!("  As decimal integer: {}", int);
+                println!("  As decimal integer: {int}");
             }
             dates.push(Datelike {
                 source: c.to_string(),
@@ -92,7 +92,7 @@ fn main() {
         }
         if let Ok(int) = i64::from_str_radix(&c, 16) {
             if args.verbose > 1 {
-                println!("  As hexadecimal integer: {}", int);
+                println!("  As hexadecimal integer: {int}");
             }
             dates.push(Datelike {
                 source: c.to_string(),
@@ -103,7 +103,7 @@ fn main() {
 
         if let Ok(float) = c.parse::<f64>() {
             if args.verbose > 1 {
-                println!("  As a float! {:?}", float);
+                println!("  As a float! {float:?}");
             }
 
             if let Some(ndt) = epochs::icq(float) {
@@ -134,11 +134,11 @@ fn main() {
                 viewed_as: View::Uuid,
                 epochs,
             });
-        };
+        }
     }
 
     if args.debug {
-        println!("{:?}", dates);
+        println!("{dates:?}");
     }
 
     match args.output_format {
@@ -154,11 +154,11 @@ fn main() {
         }
         OutputFormat::Json => {
             let json = serde_json::to_string(&dates).unwrap();
-            println!("{}", json);
+            println!("{json}");
         }
         OutputFormat::JsonPretty => {
             let json = serde_json::to_string_pretty(&dates).unwrap();
-            println!("{}", json);
+            println!("{json}");
         }
     }
 }
@@ -247,7 +247,7 @@ fn get_epochs(int: i64, min: NaiveDate, max: NaiveDate) -> HashMap<String, Naive
 }
 
 /// See if the given string contains a ULID. If it does, extract the
-/// timestamp. (https://github.com/ulid/spec)
+/// timestamp. <https://github.com/ulid/spec>
 ///
 fn get_ulid(text: &str) -> Option<NaiveDateTime> {
     static RE: LazyLock<Regex> =
@@ -258,11 +258,7 @@ fn get_ulid(text: &str) -> Option<NaiveDateTime> {
         let ts_ms = crockford::decode(&text[..10]).unwrap();
         let secs = (ts_ms / 1000) as i64;
         let nsecs = (ts_ms % 1000) as u32 * 1_000_000;
-        if let Some(dt) = DateTime::from_timestamp(secs, nsecs) {
-            Some(dt.naive_utc())
-        } else {
-            None
-        }
+        DateTime::from_timestamp(secs, nsecs).map(|dt| dt.naive_utc())
     } else {
         None
     }
@@ -314,12 +310,12 @@ fn get_uuid(text: &str) -> Option<Uuid> {
                 }
             }
             _ => (),
-        };
+        }
     }
     None
 }
 
-/// Try to parse the given string as a NaiveDate.
+/// Try to parse the given string as a `NaiveDate`.
 fn parse_date(src: &str) -> ParseResult<NaiveDate> {
     NaiveDate::parse_from_str(src, "%Y-%m-%d")
 }
