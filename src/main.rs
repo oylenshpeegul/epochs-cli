@@ -1,13 +1,13 @@
 #[macro_use]
 extern crate maplit;
 
-use chrono::{NaiveDate, NaiveDateTime, ParseResult};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, ParseResult};
 use clap::Parser;
 use itertools::Itertools;
-use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::Serialize;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 /// Command line options for epochs.
 #[derive(Debug, Parser)]
@@ -250,15 +250,19 @@ fn get_epochs(int: i64, min: NaiveDate, max: NaiveDate) -> HashMap<String, Naive
 /// timestamp. (https://github.com/ulid/spec)
 ///
 fn get_ulid(text: &str) -> Option<NaiveDateTime> {
-    static RE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$").unwrap());
+    static RE: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$").unwrap());
 
     if RE.is_match(text) {
         // The first ten characters of the ULID contain the timestamp.
         let ts_ms = crockford::decode(&text[..10]).unwrap();
         let secs = (ts_ms / 1000) as i64;
         let nsecs = (ts_ms % 1000) as u32 * 1_000_000;
-        NaiveDateTime::from_timestamp_opt(secs, nsecs)
+        if let Some(dt) = DateTime::from_timestamp(secs, nsecs) {
+            Some(dt.naive_utc())
+        } else {
+            None
+        }
     } else {
         None
     }
@@ -268,7 +272,7 @@ fn get_ulid(text: &str) -> Option<NaiveDateTime> {
 /// extract the version and the date-time if it has it.
 ///
 fn get_uuid(text: &str) -> Option<Uuid> {
-    static RE: Lazy<Regex> = Lazy::new(|| {
+    static RE: LazyLock<Regex> = LazyLock::new(|| {
         Regex::new(
             r"(?x)
             ([0-9A-Fa-f]{8})  -?
