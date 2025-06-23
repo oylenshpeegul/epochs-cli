@@ -2,6 +2,7 @@
 extern crate maplit;
 
 use chrono::{DateTime, NaiveDate, NaiveDateTime, ParseResult};
+use clap::builder::styling::{AnsiColor, Effects, Style, Styles};
 use clap::{Parser, ValueEnum};
 use itertools::Itertools;
 use regex::Regex;
@@ -9,9 +10,25 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
+const HEADER: Style = AnsiColor::Green.on_default().effects(Effects::BOLD);
+const USAGE: Style = AnsiColor::Green.on_default().effects(Effects::BOLD);
+const LITERAL: Style = AnsiColor::Cyan.on_default().effects(Effects::BOLD);
+const PLACEHOLDER: Style = AnsiColor::Cyan.on_default();
+const ERROR: Style = AnsiColor::Red.on_default().effects(Effects::BOLD);
+const VALID: Style = AnsiColor::Cyan.on_default().effects(Effects::BOLD);
+const INVALID: Style = AnsiColor::Yellow.on_default().effects(Effects::BOLD);
+const CARGO_STYLING: Styles = Styles::styled()
+    .header(HEADER)
+    .usage(USAGE)
+    .literal(LITERAL)
+    .placeholder(PLACEHOLDER)
+    .error(ERROR)
+    .valid(VALID)
+    .invalid(INVALID);
+
 /// Command line options for epochs.
 #[derive(Debug, Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, styles = CARGO_STYLING)]
 struct Args {
     /// Strings to test for epochness.
     candidates: Vec<String>,

@@ -1,6 +1,6 @@
 [package]
 name = "epochs-cli"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Tim Heaney <oylenshpeegul@gmail.com>"]
 description = "Check strings given on the command line against different epochs."
 license = "MPL-2.0"
