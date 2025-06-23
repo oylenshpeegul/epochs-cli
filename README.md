@@ -1,4 +1,5 @@
 # epochs-cli
+
 Command-line interface to the epochs crate
 
 This takes strings off the command line and tries to interpret them as
@@ -15,38 +16,21 @@ This installs a binary called just `epochs`.
 
 ```
 $ epochs --help
-epochs-cli 0.4.1
-Tim Heaney <oylenshpeegul@gmail.com>
 Check strings given on the command line against different epochs.
 
-USAGE:
-    epochs [OPTIONS] [CANDIDATES]...
+Usage: epochs [OPTIONS] [CANDIDATES]...
 
-ARGS:
-    <CANDIDATES>...    Strings to test for epochness
+Arguments:
+  [CANDIDATES]...  Strings to test for epochness
 
-OPTIONS:
-    -d, --debug
-            Activate debug mode
-
-    -h, --help
-            Print help information
-
-        --max <MAX>
-            Don't report dates after this [default: 2100-12-31]
-
-        --min <MIN>
-            Don't report dates before this [default: 2000-01-01]
-
-    -o, --output-format <OUTPUT_FORMAT>
-            Desired format for output [default: text] [possible values: json, json-pretty, text]
-
-    -v, --verbose
-            Verbose mode (-v, -vv, -vvv, etc.)
-
-    -V, --version
-            Print version information
-
+Options:
+  -d, --debug                          Activate debug mode
+      --max <MAX>                      Don't report dates after this [default: 2100-12-31]
+      --min <MIN>                      Don't report dates before this [default: 2000-01-01]
+  -o, --output-format <OUTPUT_FORMAT>  Desired format for output [default: text] [possible values: json, json-pretty, text]
+  -v, --verbose...                     Verbose mode (-v, -vv, -vvv, etc.)
+  -h, --help                           Print help
+  -V, --version                        Print version
 ```
 
 Give it a number and it tries to interpret it as a date.
